@@ -1,0 +1,19 @@
+# travis가 어떤 언어를 사용할 지 알려줌
+language: python
+# 어떤 버전의 파이썬을 사용할 것인지. 강의 기준으로 안정적은 3.6
+python:
+  - "3.6"
+# 트래비스가 어떤 서비스를 할 것인지.
+services:
+  # 모든 서브 서비스는 도커에 들어가있다
+  - docker
+# 트래비스가 자동화 명령을 실행하기 전에 실행할 스크립트(일단 도커 컴포즈를 다운)
+before_script: pip install docker-compose
+# 도커 컴포스 명령어를 실행
+script:
+  # test 코드를 실행하면서 linting tool(flack8)도 실행한다.
+  # 깃헙 트래버스가 파이썬 서버를 실행할 것이다. 변경될 때 마다.
+  # 도커 컴포지트를 설치하기 위해 핍을 사용하고 마지막으로 스크립트를 실행합니다. 오류가 발생하면 빌드에 실패하고 저희에게 알림을 보냅니다
+  - docker-compose run app sh -c "python manage.py test && flack8"
+# travis 파일을 저장하기 위해 flake8을 requirements.txt에 추가해야한다.
+

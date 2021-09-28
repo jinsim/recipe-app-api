@@ -1,0 +1,9 @@
+[flake8]
+# django에 깔려진 몇몇의 자동화된 스크립트와 툴을 제외할 것이므로 
+# 왜냐하면 django는 100자 제한으로 실행되지만, 나의 프로젝트는 79자 제한이므로.(파이썬 가이드라인이 79자 제한임)
+# 따라서 linting 할 때 실패하지 않도록. 
+exclude=
+    migrations,
+    __pychache__,
+    manage.py,
+    settings.py
