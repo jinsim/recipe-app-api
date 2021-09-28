@@ -14,6 +14,6 @@ script:
   # test 코드를 실행하면서 linting tool(flack8)도 실행한다.
   # 깃헙 트래버스가 파이썬 서버를 실행할 것이다. 변경될 때 마다.
   # 도커 컴포지트를 설치하기 위해 핍을 사용하고 마지막으로 스크립트를 실행합니다. 오류가 발생하면 빌드에 실패하고 저희에게 알림을 보냅니다
-  - docker-compose run app sh -c "python manage.py test && flack8"
+  - docker-compose run app sh -c "python manage.py test && flake8"
 # travis 파일을 저장하기 위해 flake8을 requirements.txt에 추가해야한다.
 
