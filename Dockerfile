@@ -8,7 +8,17 @@ ENV PYTHONUNBUFFERD 1
 
 # 의존성 설치
 COPY ./requirements.txt /requirements.txt
+# psycopg2 종속성때문에 설치
+# 가장 작고 추가 종속성이 필요 없는 가장 좋은 방법
+RUN apk add --update --no-cache postgresql-client
+# virtual이라는 옵션을 넣으면 종속성에 대한 별칭이 생성되므로 나중에 쉽게 종속성을 제거할 수 있다.
+# 아래에 설치에 필요한 모든 임시 종속성을 나열해둔다. 알파인 이미지에 대한 완벽한 의존성임.
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+        gcc libc-dev linux-headers postgresql-dev
 RUN pip install -r /requirements.txt
+# 우리가 삭제하려는 라인을 추가할 수 있다.
+RUN apk del .tmp-build-deps
+
 
 # 도커 이미지 내에 어플리케이션 소스 코드를 저장하는데 사용할 디렉터리를 만든다.
 RUN mkdir /app

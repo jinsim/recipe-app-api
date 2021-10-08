@@ -20,4 +20,36 @@ services:
     # sh -c 는 command를 shell에서 실행한다는 뜻이다.
     # 서버를 실행할 호스트의 주소가 0.0.0.0:8000이다. 즉, 실행되는 모든 IP 주소에서 사용할 수 있는 Django 개발 서버가 실행된다.
     command: >
-      sh -c "python manage.py runserver 0.0.0.0:8000"
+      sh -c "python manage.py wait_for_db &&
+            python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+
+    # 데이터베이스에 대한 세팅을 다 했으니 앱에 환경 변수를 추가해야됨.
+    environment:
+      # 밑에 db 서비스랑 이름이 같아야한다.
+      - DB_HOST=db
+      # POSTGRES_DB와 같은 이름
+      - DB_NAME=app
+      # POSTGRES_USER와 같은 이름
+      - DB_USER=postgres
+      # POSTGRES_PASSWORD와 같은 이름
+      - DB_PASS=supersecretpassword
+
+    # 의존성, 종속성 설정
+    # 도커 컴포즈를 실행할 때, 여러 서비스들이 잘 이어져야함.
+    # 1. db가 app이 실행되기 전에 시작되어야한다.
+    # 2. HOST 이름인 db를 사용할 때, 네트워크를 통해 데이터베이스 서비스를 이용할 수 있다.
+    # 따라서 app 서비스 안에서 db를 연결하면 db서비스에서 실행 중인 모든 컨테이너에 연결된다.
+    depends_on:
+      - db
+
+  db:
+    # 도커 허브에 있는 postgres의 10 alpine버전을 끌어내린다.
+    image: postgres:10-alpine
+    # 이제 환경 변수를 적을 것이다.
+    environment:
+      # 이 설정은 Postgres 컨테이너가 시작될 때 예상하는 설정이기 때문에 이 설정을 그대로 작성하는 것이 중요합니다.
+      - POSTGRES_DB=app
+      - POSTGRES_USER=postgres
+      # 같은 비밀번호를 쓰는 것이 그렇게 좋지 않음.
+      - POSTGRES_PASSWORD=supersecretpassword
