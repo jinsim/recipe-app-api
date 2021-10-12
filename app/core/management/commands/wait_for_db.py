@@ -7,12 +7,11 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     """Django command to pause execution until database is available"""
-
     # 사용자 정의 인수와 옵션을 관리 명령에 전달. 대기 시간을 정의하거나 다른 옵션 사용 가능 
     def handle(self, *args, **options):
         # 관리 명령 중 실제로 출력 가능
         self.stdout.write('Waiting for database...')
-        # 디비 연결을 나타내는 변수. 기본값은 None
+        # 디비 연결을 나타내는 변수. 기본값은 Noneㄴ
         db_conn = None
         while not db_conn:
             try: 
