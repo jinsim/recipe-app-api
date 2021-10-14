@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # 관리 명령 중 실제로 출력 가능
         self.stdout.write('Waiting for database...')
-        # 디비 연결을 나타내는 변수. 기본값은 Noneㄴ
+        # 디비 연결을 나타내는 변수. 기본값은 None
         db_conn = None
         while not db_conn:
             try: 
