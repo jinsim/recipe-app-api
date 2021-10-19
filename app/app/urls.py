@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # url을 문자열로 정의하는 데 유용함
     path('api/user/', include('user.urls')),
+    path('api/recipe/', include('recipe.urls')),
 ]

@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-# Create your models here.
+
+# auth user model을 가져옴.
+from django.conf import settings
+
 
 class UserManager(BaseUserManager):
 
@@ -10,9 +13,9 @@ class UserManager(BaseUserManager):
             raise ValueError("Users must have an email address")
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)    
+        user.save(using=self._db)
         return user
-    
+
     def create_superuser(self, email, password):
         """Creates and saves a new super user"""
         user = self.create_user(email, password)
@@ -20,6 +23,7 @@ class UserManager(BaseUserManager):
         user.is_superuser = True
         user.save(using=self._db)
         return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     # 이메일 주소를 지원하도록 사용자 지정을 할 수 있다.(사용자 이름 대신 이메일 사용)
@@ -32,3 +36,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
     USERNAME_FIELD = "email"
+
+
+class Tag(models.Model):
+    """Tag to be used for a recipe"""
+    name = models.CharField(max_length=255)
+    # 유저를 직접 참조하는 것 보다, django settings에서 auth user model을 직접 가져오는 best practice를 사용할 것이다.
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return self.name
