@@ -13,6 +13,7 @@ from rest_framework import status
 # 값이 변하지 않는 변수를 뜻함.
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+ME_URL = reverse('user:me')
 
 
 def create_user(**params):
@@ -115,3 +116,58 @@ class PublicUserApiTests(TestCase):
         res = self.client.post(TOKEN_URL, {'email': 'one', 'password': ''})
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_user_unauthorized(self):
+        """Test taht authentication is required for user"""
+        res = self.client.get(ME_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateUserApiTests(TestCase):
+    """Test API requests that require authentication"""
+    # 각각의 테스트에 대해 authentication을 할 것이므로, 모든 각각의 테스트에 authenticatoin을 설정할 필요는 없다.
+    # 그냥 setup하고 테스트가 발생하기 전에 그것이 자동으로 되게 하면 된다.
+
+    def setUp(self):
+        self.user = create_user(
+            email='test@londonappdev.com',
+            password='testpass',
+            name='name'
+        )
+        # 유저를 만들었으면, 클라이언트 설정. 재사용가능한 클라이언트
+        self.client = APIClient()
+        # 강제 인증 방식을 사용해서 클라이언트가 샘플 유저가 보내는 모든 요청을 인증한다.
+        # force_authenticate는 시뮬레이션이나 인증된 요청을 쉽게 만들어주는 helper func이다.
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in used"""
+        # 우리는 이미 setup에서 인증을 받았으므로, 따로 인증을 할 필요 없이 바로 진행하면 된다.
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # 예상되는 반환을 적음. 아마 이메일만 반환할 것.
+        # 해시된 값이라도, 비번을 보내는 것은 권장되지 않음.
+        self.assertEqual(res.data, {
+            # setup에 있는 user 정보를 참조
+            'name': self.user.name,
+            'email': self.user.email
+        })
+
+    # post 요청을 막음
+    def test_post_me_not_allowed(self):
+        """Test that POST is not allowed on the me url"""
+        res = self.client.post(ME_URL, {})
+
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    # 프로필 업데이트 테스트
+    def test_update_user_profile(self):
+        """Test updating the user profile for authenticated user"""
+        payload = {'name': 'new name', 'password': 'newpassword123'}
+        res = self.client.patch(ME_URL, payload)
+        # user의 db helper func으로 db가 최신 값으로 업데이트 시킬 수 있다.
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)

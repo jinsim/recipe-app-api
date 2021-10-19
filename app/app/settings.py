@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "user",
     "rest_framework",
     "rest_framework.authtoken",
+    "recipe",
 ]
 
 MIDDLEWARE = [
@@ -78,7 +79,7 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    # 쉽게 구성을 바꿀 수 있다. 
+    # 쉽게 구성을 바꿀 수 있다.
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         # host와 password 같은 것을 도커를 통해 환경 변수에 넣어놨다.

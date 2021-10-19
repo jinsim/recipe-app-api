@@ -24,6 +24,23 @@ class UserSerializer(serializers.ModelSerializer):
         # 그냥 create하면 안되고, model의 create_user가 실행 되어야 비번이 숨겨짐.
         return get_user_model().objects.create_user(**validated_data)
 
+    # 업데이트를 재정의함. 객체와 검증된 데이터가 있어야한다.
+    # instance는 modelserializer과 연결되어 user객체가 된다.
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+        # validated_data에서 비번을 제외함
+        # 두번째 인자는 기본값.get과 달리 없으면 기본값을 제공해야함.
+        password = validated_data.pop('password', None)
+        # 나머지 validated_data에 대해 업데이트를 요청함
+        # super을 사용하면 modelserializer의 update함수를 가져올 수 있다. 기본 기능을 가져와서 확장할 수 있다.
+        user = super().update(instance, validated_data)
+
+        if password:
+            user.set_password(password)
+            user.save()
+
+        return user
+
 
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user authentication object"""
