@@ -11,7 +11,10 @@ from core.models import Tag
 from recipe import serializers
 
 
-class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+# 원하는 믹스인만 골라 넣으면 된다. CreateModelMixin을 추가하였으면 생성 옵션이 추가되므로 create func을 재정의(오버라이드)할 수 있다.
+class TagViewSet(viewsets.GenericViewSet,
+                 mixins.ListModelMixin,
+                 mixins.CreateModelMixin):
     """Manage tags in the database"""
     # 상세한 기능을 덮어쓰고 싶으면 공식 문서 참고
     authentication_classes = (TokenAuthentication,)
@@ -35,3 +38,8 @@ class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return self.queryset.filter(
             user=self.request.user
         ).order_by('-name').distinct()
+
+    # 객체를 create할 때 자동으로 실행되는 함수이다.
+    def perform_create(self, serializer):
+        """Create a new tag"""
+        serializer.save(user=self.request.user)

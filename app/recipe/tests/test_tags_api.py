@@ -79,23 +79,26 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]['name'], tag.name)
 
-    # def test_create_tag_successful(self):
-    #     """Test creating a new tag"""
-    #     payload = {'name': 'Test tag'}
-    #     self.client.post(TAGS_URL, payload)
+    # tag가 성공적으로 만들어졌는지 확인.
+    def test_create_tag_successful(self):
+        """Test creating a new tag"""
+        payload = {'name': 'Test tag'}
+        self.client.post(TAGS_URL, payload)
 
-    #     exists = Tag.objects.filter(
-    #         user=self.user,
-    #         name=payload['name']
-    #     ).exists()
-    #     self.assertTrue(exists)
+        # 위 url에 payload를 post로 보내면 아래의 tag가 만들어져야한다.
+        exists = Tag.objects.filter(
+            user=self.user,
+            name=payload['name']
+        ).exists()
+        self.assertTrue(exists)
 
-    # def test_create_tag_invalid(self):
-    #     """Test creating a new tag with invalid payload"""
-    #     payload = {'name': ''}
-    #     res = self.client.post(TAGS_URL, payload)
+    # 잘못된 name을 가지고 payload를 만들 때.
+    def test_create_tag_invalid(self):
+        """Test creating a new tag with invalid payload"""
+        payload = {'name': ''}
+        res = self.client.post(TAGS_URL, payload)
 
-    #     self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     # def test_retrieve_tags_assigned_to_recipes(self):
     #     """Test filtering tags by those assigned to recipes"""
