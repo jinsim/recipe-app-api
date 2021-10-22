@@ -61,3 +61,22 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Recipe(models.Model):
+    """Recipe object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    time_minutes = models.IntegerField()
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    # null=True를 하면 값이 설정되어있는지 확인해야하므로 비추천.
+    # blank True를 하면 링크가 생략될 때 빈 문자열을 반환한다. 링크가 있는지 없는지 확인할 대 유용함.
+    link = models.CharField(max_length=255, blank=True)
+    ingredients = models.ManyToManyField('Ingredient')
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title

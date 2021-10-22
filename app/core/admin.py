@@ -32,3 +32,4 @@ admin.site.register(models.User, UserAdmin)
 # 기본적인 기능만 사용할 것이므로 특별히 관리자의 기능은 필요없다.
 admin.site.register(models.Tag)
 admin.site.register(models.Ingredient)
+admin.site.register(models.Recipe)
