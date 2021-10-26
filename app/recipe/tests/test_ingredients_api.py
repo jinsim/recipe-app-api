@@ -52,7 +52,8 @@ class PrivateIngredientsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    # INGREDIENTS_URL에 get 요청을 보낼 때 정상적으로 반환이 되는 것을 위에 함수에서 확인했으니, 이제 인증된 유저에게만 반환되는지 확인한다.
+    # INGREDIENTS_URL에 get 요청을 보낼 때 정상적으로 반환이 되는 것을 위에 함수에서 확인했다.
+    # 이제 인증된 유저에게만 반환되는지 확인한다.
     def test_ingredients_limited_to_user(self):
         """Test that ingredients for the authenticated user are returend"""
         user2 = get_user_model().objects.create_user(

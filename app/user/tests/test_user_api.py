@@ -125,7 +125,8 @@ class PublicUserApiTests(TestCase):
 
 class PrivateUserApiTests(TestCase):
     """Test API requests that require authentication"""
-    # 각각의 테스트에 대해 authentication을 할 것이므로, 모든 각각의 테스트에 authenticatoin을 설정할 필요는 없다.
+    # 각각의 테스트에 대해 authentication을 할 것이다.
+    # 따라서 모든 각각의 테스트에 authenticatoin을 설정할 필요는 없다.
     # 그냥 setup하고 테스트가 발생하기 전에 그것이 자동으로 되게 하면 된다.
 
     def setUp(self):

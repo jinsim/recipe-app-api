@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
+    PermissionsMixin
 
 # auth user model을 가져옴.
 from django.conf import settings
@@ -41,7 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Tag(models.Model):
     """Tag to be used for a recipe"""
     name = models.CharField(max_length=255)
-    # 유저를 직접 참조하는 것 보다, django settings에서 auth user model을 직접 가져오는 best practice를 사용할 것이다.
+    # 유저를 직접 참조하는 것 보다, django settings에서 auth user model을 직접 가져온다.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

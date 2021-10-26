@@ -32,7 +32,8 @@ class UserSerializer(serializers.ModelSerializer):
         # 두번째 인자는 기본값.get과 달리 없으면 기본값을 제공해야함.
         password = validated_data.pop('password', None)
         # 나머지 validated_data에 대해 업데이트를 요청함
-        # super을 사용하면 modelserializer의 update함수를 가져올 수 있다. 기본 기능을 가져와서 확장할 수 있다.
+        # super을 사용하면 modelserializer의 update함수를 가져올 수 있다.
+        # 이처럼 기본 기능을 가져와서 확장할 수 있다.
         user = super().update(instance, validated_data)
 
         if password:

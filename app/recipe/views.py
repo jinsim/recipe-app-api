@@ -1,6 +1,7 @@
 # 우리가 만든 뷰는 단순히 뷰셋일 것임.
 # 제네릭 뷰셋에 기초하여 list model mixin을 사용할 것이다.
-# DRF의 특징으로, 뷰셋의 다른 기능은 가져오지 않고 우리가 사용할 list model function만 가져온다. 생성 삭제는 필요없음. 목록만 가져오면 됨.
+# DRF의 특징으로, 뷰셋의 다른 기능은 가져오지 않고 우리가 사용할 list model function만 가져온다.
+# 생성 삭제는 필요없고, 목록만 가져오면 됨.
 # 이는 제네릭 뷰셋과 list model mixin의 조합으로 가능하다.
 from rest_framework import viewsets, mixins
 # 인증을 위해서
@@ -11,7 +12,8 @@ from core.models import Tag, Ingredient, Recipe
 from recipe import serializers
 
 # Tag뷰셋과 ingredient뷰셋이 공통점이 많아, 합치도록 하겠다.
-# 원하는 믹스인만 골라 넣으면 된다. CreateModelMixin을 추가하였으면 생성 옵션이 추가되므로 create func을 재정의(오버라이드)할 수 있다.
+# 원하는 믹스인만 골라 넣으면 된다.
+# CreateModelMixin을 추가하였으면 생성 옵션이 추가되므로 create func을 재정의할 수 있다.
 
 
 class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
@@ -22,7 +24,8 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    # 해당 뷰셋이 호출될 때, 객체를 검색하기 위해서 get_queryset함수를 호출할 것이므로 우리는 이를 상속해서 인증된 유저만 가능하도록 제한할 수 있다.
+    # 해당 뷰셋이 호출될 때, 객체를 검색하기 위해서 get_queryset함수를 호출할 것이다.
+    # 우리는 이를 상속해서 인증된 유저만 가능하도록 제한할 수 있다.
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
         # Tag.objects.all() 처럼 해도 되긴 하지만, 만약 해당 객체가 변경중일 때 검색하면 작업이 수행되지 않는다.

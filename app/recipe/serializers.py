@@ -9,7 +9,7 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name')
-        # read_only_fields는 사용자가 request를 create or edit할 때 id를 업데이트하지 못하게 하기 위함이다.
+        # read_only_fields는 사용자가 request를 create or edit할 때 id의 업데이트를 막기 위함이다.
         read_only_fields = ('id',)
 
 
