@@ -110,3 +110,66 @@ class PrivateRecipeApiTests(TestCase):
 
         serializer = RecipeDetailSerializer(recipe)
         self.assertEqual(res.data, serializer.data)
+
+    # 아무것도 안넣고 recipe 생성할 때 테스트
+    def test_create_basic_recipe(self):
+        """Test creating recipe"""
+        # 생성할 때 넣을 정보들
+        payload = {
+            'title': 'Chocolate cheesecake',
+            'time_minutes': 30,
+            'price': 5.00
+        }
+        # HTTP post 요청 생성
+        res = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # 반환된 recipe가 우리가 생성할 때 넣은 정보들을 다 가지고 있는지 확인.
+        recipe = Recipe.objects.get(id=res.data['id'])
+        for key in payload.keys():
+            # getattr은 딕셔너리에서 key를 넣고 value를 가져옴
+            self.assertEqual(payload[key], getattr(recipe, key))
+
+    # 태그를 넣어서 recipe를 생성할 때 테스트
+    def test_create_recipe_with_tags(self):
+        """Test creating a recipe with tags"""
+        tag1 = sample_tag(user=self.user, name='Vegan')
+        tag2 = sample_tag(user=self.user, name='Dessert')
+        # 태그를 생성해서 recipe에 넣는다.
+        payload = {
+            'title': 'Avocado lime cheesecake',
+            # 태그를 넣는 것이 아니라 태그의 id를 넣음.
+            'tags': [tag1.id, tag2.id],
+            'time_minutes': 60,
+            'price': 20.00
+        }
+        res = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=res.data['id'])
+        # 태그가 잘 들어간지 확인한다.
+        tags = recipe.tags.all()
+        self.assertEqual(tags.count(), 2)
+        # assertIn은 리스트나 쿼리셋에서 객체가 있는지 확인할 때 주로 사용한다.
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
+
+    # 재료를 넣어서 recipe를 생성할 때 테스트
+    def test_create_recipe_with_ingredients(self):
+        """Test creating recipe with ingredients"""
+        ingredient1 = sample_ingredient(user=self.user, name='Prawns')
+        ingredient2 = sample_ingredient(user=self.user, name='Ginger')
+        payload = {
+            'title': 'Thai prawn red curry',
+            'ingredients': [ingredient1.id, ingredient2.id],
+            'time_minutes': 20,
+            'price': 7.00
+        }
+        res = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=res.data['id'])
+        ingredients = recipe.ingredients.all()
+        self.assertEqual(ingredients.count(), 2)
+        self.assertIn(ingredient1, ingredients)
+        self.assertIn(ingredient2, ingredients)

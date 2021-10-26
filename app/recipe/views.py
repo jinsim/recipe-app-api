@@ -84,3 +84,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return serializers.RecipeImageSerializer
 
         return self.serializer_class
+
+    def perform_create(self, serializer):
+        """Create a new recipe"""
+        # reciple의 user를 현재 요청하는 user로 설정한다.
+        serializer.save(user=self.request.user)
