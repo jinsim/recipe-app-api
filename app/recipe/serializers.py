@@ -43,3 +43,11 @@ class RecipeSerializer(serializers.ModelSerializer):
             'price', 'link'
         )
         read_only_fields = ('id',)
+
+
+class RecipeDetailSerializer(RecipeSerializer):
+    # 기존에 만든 RecipeSerializer을 상속한다.
+    """Serialize a recipe detail"""
+    # many=True로 인해 여러 재료들을 가질 수 있고, read_only=True로 인해 생성 및 변경할 수 없다.
+    ingredients = IngredientSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)

@@ -70,3 +70,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(ingredients__id__in=ingredient_ids)
 
         return queryset.filter(user=self.request.user)
+
+    # 스펠링을 맞추지 않으면 작동하지 않을 수도 있다.
+    def get_serializer_class(self):
+        # 액션에 따라서 적합한 serializer을 반환한다.
+        """Return appropriate serializer class"""
+        if self.action == 'retrieve':
+            return serializers.RecipeDetailSerializer
+        elif self.action == 'upload_image':
+            return serializers.RecipeImageSerializer
+
+        return self.serializer_class
