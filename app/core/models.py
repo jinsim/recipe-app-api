@@ -1,9 +1,22 @@
+# 파이썬 uuid 패키지
+import uuid
+# os 정확한 파일 경로를 가져오기 위해서
+import os
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
     PermissionsMixin
 
 # auth user model을 가져옴.
 from django.conf import settings
+
+
+def recipe_image_file_path(instance, filename):
+    """Generate file path for new recipe image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+    # 두 문자열을 결합하여 유효한 경로를 만들어내는 함수
+    # 유효하지 않으면 오류를 발생함.
+    return os.path.join('uploads/recipe/', filename)
 
 
 class UserManager(BaseUserManager):
@@ -78,6 +91,8 @@ class Recipe(models.Model):
     link = models.CharField(max_length=255, blank=True)
     ingredients = models.ManyToManyField('Ingredient')
     tags = models.ManyToManyField('Tag')
+    # 함수()하지 않기. 참조를 전달할 함수만 전달. 왜냐하면 백그라운드에서 호출하기 위함.
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     def __str__(self):
         return self.title
