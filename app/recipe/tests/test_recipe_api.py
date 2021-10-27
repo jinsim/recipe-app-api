@@ -173,3 +173,48 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(ingredients.count(), 2)
         self.assertIn(ingredient1, ingredients)
         self.assertIn(ingredient2, ingredients)
+
+    # 업데이트에 대한 부분은 뷰셋 내장 기능이 있어 테스트를 만들지 않아도 된다.
+    # 그러나 앱에서 사용할 모든 기능과 API 업데이트 방법을 보여주기 위해서 작성한다.
+    def test_partial_update_recipe(self):
+        # 부분 업데이트 - patch
+        """Test updating a recipe with patch"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='Curry')
+
+        # title 과 tags 가 변경되고, 나머지는 그대로이다.
+        payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
+        url = detail_url(recipe.id)
+        self.client.patch(url, payload)
+
+        # 모델에서 제공하는 db 새로고침 기능이다. 이걸 사용하지 않으면 값이 바뀌지 않는다.
+        # 따라서 객체를 검색한 이후는 db가 바뀌더라도 refresh를 하지 않는 이상 바귀지 않는다.
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title'])
+        tags = recipe.tags.all()
+        # count로 객체 개수 세는 것과 동일함.
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_recipe(self):
+        # 전체 업데이트 - put
+        """Test updating a recipe with put"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+        payload = {
+            'title': 'Spaghetti carbonara',
+            'time_minutes': 25,
+            'price': 5.00
+        }
+        url = detail_url(recipe.id)
+        self.client.put(url, payload)
+
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.price, payload['price'])
+        # put에서는, payload에 제외한 부분은 삭제된다. 덮어쓰기이다.
+        tags = recipe.tags.all()
+        # payload에 없는 tag는 없어질 것이다.
+        self.assertEqual(len(tags), 0)

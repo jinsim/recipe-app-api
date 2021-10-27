@@ -127,6 +127,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
+# static 파일들은 웹서버/static에 위치할 것이다.
 STATIC_URL = '/static/'
+# media 경로도 추가함으로써, 미디어 파일을 업로드할 때 웹 서버를 통해 엑세스 할 수 있다.
+MEDIA_URL = '/media/'
+
+# media root는 django에게 모든 media파일을 도커 컨테이너에 저장하는 위치를 알려준다.
+MEDIA_ROOT = '/vol/web/media'
+# 프로젝트가 빌드될 때 모든 정적 파일들이 덤프되는 곳
+STATIC_ROOT = '/vol/web/static'
+# django는 collectstatic 명령어로 정적 파일들을 모은다.그리고 그를 static root에 저장한다.
+# 즉 배포버전에서 프로젝트를 실행할 때, 이러한 정적 파일에 엑세스하거나 django admin을 볼 수 있다.
+
+# django 개발 서버는 우리 프로젝트에 대한 모든 의존성에 대해 정적 파일을 제공해준다.
+# 그러나 media는 제공해주지 않는다. 따라서 urls.py에 수동으로 추가해야한다.
+
 
 AUTH_USER_MODEL = 'core.User'
