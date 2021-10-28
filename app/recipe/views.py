@@ -49,6 +49,7 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
             # 레시피가 있는 것들만 반환한다.
             queryset = queryset.filter(recipe__isnull=False)
 
+        # distinct를 안하면 중복된 아이템이 나옴.
         return queryset.filter(
             user=self.request.user
         ).order_by('-name').distinct()
