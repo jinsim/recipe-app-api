@@ -7,7 +7,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag
+from core.models import Tag, Recipe
 # unit 테스트를 작성한 후 통과시키기 위해서 시리얼라이저를 만든다.
 from recipe.serializers import TagSerializer
 
@@ -100,44 +100,48 @@ class PrivateTagsApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_retrieve_tags_assigned_to_recipes(self):
-    #     """Test filtering tags by those assigned to recipes"""
-    #     tag1 = Tag.objects.create(user=self.user, name='Breakfast')
-    #     tag2 = Tag.objects.create(user=self.user, name='Lunch')
-    #     recipe = Recipe.objects.create(
-    #         title='Coriander eggs on toast',
-    #         time_minutes=10,
-    #         price=5.00,
-    #         user=self.user
-    #     )
-    #     recipe.tags.add(tag1)
+    # 쿼리 파라미터 assined_only를 True를 의미하는 1을 넣는다. 그럼 레시피에 할당된 태그만 반환된다.
+    def test_retrieve_tags_assigned_to_recipes(self):
+        """Test filtering tags by those assigned to recipes"""
+        tag1 = Tag.objects.create(user=self.user, name='Breakfast')
+        tag2 = Tag.objects.create(user=self.user, name='Lunch')
+        # 레시피를 만들어 tag1을 붙인다.
+        recipe = Recipe.objects.create(
+            title='Coriander eggs on toast',
+            time_minutes=10,
+            price=5.00,
+            user=self.user
+        )
+        recipe.tags.add(tag1)
 
-    #     res = self.client.get(TAGS_URL, {'assigned_only': 1})
+        # get에 딕셔너리를 함께 보냈다. assigned_only에 1. 쿼리 파라미터
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
 
-    #     serializer1 = TagSerializer(tag1)
-    #     serializer2 = TagSerializer(tag2)
-    #     self.assertIn(serializer1.data, res.data)
-    #     self.assertNotIn(serializer2.data, res.data)
+        serializer1 = TagSerializer(tag1)
+        serializer2 = TagSerializer(tag2)
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
 
-    # def test_retrieve_tags_assigned_unique(self):
-    #     """Test filtering tags by assigned returns unique items"""
-    #     tag = Tag.objects.create(user=self.user, name='Breakfast')
-    #     Tag.objects.create(user=self.user, name='Lunch')
-    #     recipe1 = Recipe.objects.create(
-    #         title='Pancakes',
-    #         time_minutes=5,
-    #         price=3.00,
-    #         user=self.user
-    #     )
-    #     recipe1.tags.add(tag)
-    #     recipe2 = Recipe.objects.create(
-    #         title='Porridge',
-    #         time_minutes=3,
-    #         price=2.00,
-    #         user=self.user
-    #     )
-    #     recipe2.tags.add(tag)
+    def test_retrieve_tags_assigned_unique(self):
+        """Test filtering tags by assigned returns unique items"""
+        tag = Tag.objects.create(user=self.user, name='Breakfast')
+        # 이걸 안만들면 무조건 len(res.data)가 1임.
+        Tag.objects.create(user=self.user, name='Lunch')
+        recipe1 = Recipe.objects.create(
+            title='Pancakes',
+            time_minutes=5,
+            price=3.00,
+            user=self.user
+        )
+        recipe1.tags.add(tag)
+        recipe2 = Recipe.objects.create(
+            title='Porridge',
+            time_minutes=3,
+            price=2.00,
+            user=self.user
+        )
+        recipe2.tags.add(tag)
 
-    #     res = self.client.get(TAGS_URL, {'assigned_only': 1})
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
 
-    #     self.assertEqual(len(res.data), 1)
+        self.assertEqual(len(res.data), 1)

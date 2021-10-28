@@ -37,7 +37,19 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
         """Return objects for the current authenticated user only"""
         # Tag.objects.all() 처럼 해도 되긴 하지만, 만약 해당 객체가 변경중일 때 검색하면 작업이 수행되지 않는다.
         # 이미 인증된 유저일 것이다.
-        return self.queryset.filter(
+        assigned_only = bool(
+            # assigned_only는 0아니면 1이 온다. 다만, 문자열인지 뭔지 모른다.
+            # 그래서 이 값을 int로 변환한 다음, bool로 변경한다.
+            # 또는 문자열에 0을 붙여 bool을 하면 true가 반환된다. 그걸 방지하기 위함이다.
+            # , 0 은 디폴트 값이다. none일때 0으로 변환한다.
+            int(self.request.query_params.get('assigned_only', 0))
+        )
+        queryset = self.queryset
+        if assigned_only:
+            # 레시피가 있는 것들만 반환한다.
+            queryset = queryset.filter(recipe__isnull=False)
+
+        return queryset.filter(
             user=self.request.user
         ).order_by('-name').distinct()
 
