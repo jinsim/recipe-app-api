@@ -51,3 +51,12 @@ class RecipeDetailSerializer(RecipeSerializer):
     # many=True로 인해 여러 재료들을 가질 수 있고, read_only=True로 인해 생성 및 변경할 수 없다.
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+
+
+class RecipeImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to recipes"""
+    # 우리의 레시피에 업로드할 사진
+    class Meta:
+        model = Recipe
+        fields = ('id', 'image')
+        read_only_fields = ('id',)

@@ -3,10 +3,17 @@
 # DRF의 특징으로, 뷰셋의 다른 기능은 가져오지 않고 우리가 사용할 list model function만 가져온다.
 # 생성 삭제는 필요없고, 목록만 가져오면 됨.
 # 이는 제네릭 뷰셋과 list model mixin의 조합으로 가능하다.
-from rest_framework import viewsets, mixins
+# 상태를 확인하여 커스텀 액션을 위한 상태를 만드는 목적
+from rest_framework import viewsets, mixins, status
 # 인증을 위해서
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+
+# 뷰셋에 커스텀 액션을 추가하는데 사용됨.
+from rest_framework.decorators import action
+# 커스텀 response를 반환하기 위함.
+from rest_framework.response import Response
+
 
 from core.models import Tag, Ingredient, Recipe
 from recipe import serializers
@@ -62,19 +69,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
-        tags = self.request.query_params.get('tags')
-        ingredients = self.request.query_params.get('ingredients')
-        queryset = self.queryset
-        if tags:
-            tag_ids = self._params_to_ints(tags)
-            queryset = queryset.filter(tags__id__in=tag_ids)
-        if ingredients:
-            ingredient_ids = self._params_to_ints(ingredients)
-            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
 
-        return queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user)
 
     # 스펠링을 맞추지 않으면 작동하지 않을 수도 있다.
+    # get serializer class로 serializer을 설정하는 것이 가장 좋다.
+    # 이 방식으로 DRF는 browsable api 안에서 어떤 serializer를 보여줄 지 알 수 있다.
     def get_serializer_class(self):
         # 액션에 따라서 적합한 serializer을 반환한다.
         """Return appropriate serializer class"""
@@ -89,3 +89,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Create a new recipe"""
         # reciple의 user를 현재 요청하는 user로 설정한다.
         serializer.save(user=self.request.user)
+
+    # 위의 get queryset, get serializer class, perform create는 디폴트 액션이다.
+    # override를 안하면 그냥 디폴트 액션이 실행된다.
+    # 우리는 여기에 커스텀 함수를 넣을 수 있다. 그리고 그것을 커스텀 액션으로 정의 가능하다.
+    # method를 정의할 수 있다. 우리는 사용자가 이미지를 게시하도록 작업을 만들 것이니 post
+    # detail을 true로 한 것은, 액션이 detail, 즉 세부 레시피를 위한 작업이라는 뜻.
+    # 이미 존재하는 레시피에 대한 이미지만 업로드 가능.
+    # url_path에 레시피의 id가 있는 세부 url을 넣어야한다.
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    # pk는 url과 함께 전달되는 primary key
+    def upload_image(self, request, pk=None):
+        """Upload an image to a recipe"""
+        # get object는 디폴트를 가져오거나 url의 id를 기반으로 접근 한 객체를 가져온다.
+        recipe = self.get_object()
+        # 레시피와 request.data를 넣어서 보냄.
+        # get_serializer_class를 업데이트해야함.
+        serializer = self.get_serializer(
+            recipe,
+            data=request.data
+        )
+        # 데이터가 유효한지 확인함. 이미지가 있는지, 추가 필드는 없는지.
+        if serializer.is_valid():
+            # 모델 시리얼라이저를 쓰고 있음. save를 하면 객체가 저장됨.
+            serializer.save()
+            # Response를 반환함.
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        # serializer에 잘못된 데이터가 있는 경우.
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )

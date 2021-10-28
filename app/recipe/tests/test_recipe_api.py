@@ -1,3 +1,14 @@
+# 임시 파일을 생성할 수 있는 파이썬 함수
+# 시스템 어딘가에 임시 파일을 생성하고 그 파일을 사용한 후 삭제까지 가능
+import tempfile
+# 경로 이름을 생성하고, 시스템에 파일이 있는지 확인하는 것들이 가능
+import os
+
+# PIL은 pillow requirement이자 원래 이름. pillow는 PIL의 fork이다. 현재 pillow가 권장됨.
+# Image 클래스를 가져오면, 테스트 이미지를 생성해서 API에 업로드할 수 있다.
+from PIL import Image
+
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -10,6 +21,14 @@ from core.models import Recipe, Tag, Ingredient
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 RECIPES_URL = reverse('recipe:recipe-list')
+
+
+def image_upload_url(recipe_id):
+    # 업로드 이미지 url을 생성하는 함수.
+    """Return URL for recipe image upload"""
+    # 이미지를 업로드하기 위해서는 기존 레시피 id가 필요하다.
+    # 따라서 reverse 함수에 인자로 넣는다.
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
 
 
 def detail_url(recipe_id):
@@ -218,3 +237,60 @@ class PrivateRecipeApiTests(TestCase):
         tags = recipe.tags.all()
         # payload에 없는 tag는 없어질 것이다.
         self.assertEqual(len(tags), 0)
+
+
+class RecipeImageUploadTests(TestCase):
+    # 이미지 업로드 함수들에는 몇가지 공통점들이 있으므로 클래스 분리함.
+
+    # public private 말고 다른 클래스를 만들어도 됨. 상황에 따라 다른 setup 설정 필요.
+    # setup 함수는 말 그대로, 테스트의 설정에서 일어나는 일들.
+    # 테스트가 실행되기 전에 설정하고, 테스트가 끝난 후에는 사라지게 할 수 있음.(teardown)
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@londonappdev.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
+        # 테스트할 recipe도 고정으로 넣어버림.
+        self.recipe = sample_recipe(user=self.user)
+
+    # 테스트가 끝난 후에 시스템에 테스트 파일들이 쌓이는 것을 원치 않는다.
+    def tearDown(self):
+        self.recipe.image.delete()
+
+    #
+    def test_upload_image_to_recipe(self):
+        """Test uploading an email to recipe"""
+        url = image_upload_url(self.recipe.id)
+        # suffix에 확장자를 넣을 수 있다.
+        # ntf는 명명된 임시 파일의 줄임말. 이름 없이 파일을 반환하고 싶지 않기 때문에
+        # 이름이 있어야 업로드 또는 이미지 업로드에서 create name func에 전달할 수 있다.
+        # 우리가 쓸 수 있는 임시 파일을 시스템에 생성한 다음 컨텍스트 관리자를 종료.
+        # 우리가 명령문을 벗어난 후에 자동으로 해당 파일을 제거.
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            # 이미지를 만드는 단계.
+            # 10x10는 보이는 것이 중요한 것이 아니다.
+            # 단위 테스트를 실행하기 위해 많은 메모리와 처리 능령
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            # 파이썬이 파일을 읽는 방식.
+            # 파일을 저장했으므로, 끝점부터 다시 읽는다. 그래서 처음으로 재설정해줘야한다.
+            ntf.seek(0)
+            # multipart form으로 설정해야한다. 디폴트는 json.
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        # 데이터베이스 새로고침 후 제대로 값이 들어갔는지 확인
+        self.recipe.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    # 잘못된 요청인 경우.
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.recipe.id)
+        # image의 경로가 실제로 존재하는지 확인 후, 잘못되었으면 오류를 발생시킨다.
+        res = self.client.post(url, {'image': 'notimage'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
