@@ -67,9 +67,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    # 앞에 _를 넣으면 클래스 밖에서는 사용할 수 없다.private 함수
+    def _params_to_ints(self, qs):
+        """Convert a list of string IDs to a list of integers"""
+        return [int(str_id) for str_id in qs.split(',')]
+
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
-
+        # 쿼리 파라미터를 가져온다. 만약 없다면 디폴트 값인 none을 반환한다.
+        tags = self.request.query_params.get('tags')
+        ingredients = self.request.query_params.get('ingredients')
+        # queryset을 필터된 옵션으로 재할당하고싶지 않기 때문에.
+        # 쿼리셋은 그냥 전체 값을 할당하는 것이다. 다만, 그것이 아닐 때가 문제이다. 문제는 그것이 끝이 아니다. 그것이 아닐 때는 쟝고가 아니라 플라스크가 된다.
+        queryset = self.queryset
+        # tags 쿼리 파라미터가 있는 경우.
+        if tags:
+            tag_ids = self._params_to_ints(tags)
+            # __는 foreign key 객체에 대한 필터링
+            # 우리의 (레시피) 쿼리셋은 tags를 가지고 있다.
+            # 레시피는 tags table을 foreign key로 가지고 있다. tags는 id를 가지고 있음.
+            # __in은 우리가 제공한 리스트의 id가 있는 모든 tags를 반환하는 함수.
+            queryset = queryset.filter(tags__id__in=tag_ids)
+        if ingredients:
+            ingredient_ids = self._params_to_ints(ingredients)
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
         return self.queryset.filter(user=self.request.user)
 
     # 스펠링을 맞추지 않으면 작동하지 않을 수도 있다.
