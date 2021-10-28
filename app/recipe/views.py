@@ -78,7 +78,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         tags = self.request.query_params.get('tags')
         ingredients = self.request.query_params.get('ingredients')
         # queryset을 필터된 옵션으로 재할당하고싶지 않기 때문에.
-        # 쿼리셋은 그냥 전체 값을 할당하는 것이다. 다만, 그것이 아닐 때가 문제이다. 문제는 그것이 끝이 아니다. 그것이 아닐 때는 쟝고가 아니라 플라스크가 된다.
         queryset = self.queryset
         # tags 쿼리 파라미터가 있는 경우.
         if tags:
@@ -91,7 +90,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if ingredients:
             ingredient_ids = self._params_to_ints(ingredients)
             queryset = queryset.filter(ingredients__id__in=ingredient_ids)
-        return self.queryset.filter(user=self.request.user)
+        return queryset.filter(user=self.request.user)
 
     # 스펠링을 맞추지 않으면 작동하지 않을 수도 있다.
     # get serializer class로 serializer을 설정하는 것이 가장 좋다.
